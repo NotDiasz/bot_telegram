@@ -21,6 +21,8 @@ export default function ConfigForm({ onConfigSaved }: ConfigFormProps) {
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [manualChatId, setManualChatId] = useState('');
+  const [manualGroupName, setManualGroupName] = useState('');
 
   const handleFetchGroups = async () => {
     if (!botToken.trim()) {
@@ -67,6 +69,29 @@ export default function ConfigForm({ onConfigSaved }: ConfigFormProps) {
         ? prev.filter((id) => id !== chatId)
         : [...prev, chatId]
     );
+  };
+
+  const handleAddManualGroup = () => {
+    if (!manualChatId.trim()) {
+      setError('Digite o Chat ID do grupo');
+      return;
+    }
+    
+    const chatId = manualChatId.trim();
+    const name = manualGroupName.trim() || `Grupo ${chatId}`;
+    
+    // Verificar se já existe
+    if (availableGroups.some(g => g.chatId === chatId)) {
+      setError('Este grupo já foi adicionado');
+      return;
+    }
+    
+    setAvailableGroups(prev => [...prev, { chatId, name }]);
+    setSelectedGroups(prev => [...prev, chatId]);
+    setManualChatId('');
+    setManualGroupName('');
+    setError('');
+    setSuccess('Grupo adicionado com sucesso!');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -157,6 +182,40 @@ export default function ConfigForm({ onConfigSaved }: ConfigFormProps) {
           <p className="mt-1 text-sm text-gray-500">
             Obtenha seu token com @BotFather no Telegram
           </p>
+        </div>
+
+        {/* Adicionar grupo manualmente */}
+        <div className="border border-dashed border-gray-300 rounded-lg p-4 bg-gray-50">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">
+            Adicionar Grupo Manualmente
+          </h3>
+          <p className="text-xs text-gray-500 mb-3">
+            Se o bot não encontrou seu grupo automaticamente, adicione pelo Chat ID.
+            Para obter o Chat ID, adicione @RawDataBot ao grupo e veja o &quot;chat id&quot;.
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            <input
+              type="text"
+              value={manualChatId}
+              onChange={(e) => setManualChatId(e.target.value)}
+              placeholder="Chat ID (ex: -1001234567890)"
+              className="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+            <input
+              type="text"
+              value={manualGroupName}
+              onChange={(e) => setManualGroupName(e.target.value)}
+              placeholder="Nome do grupo (opcional)"
+              className="flex-1 min-w-[150px] px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+            <button
+              type="button"
+              onClick={handleAddManualGroup}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm"
+            >
+              Adicionar
+            </button>
+          </div>
         </div>
 
         {availableGroups.length > 0 && (
