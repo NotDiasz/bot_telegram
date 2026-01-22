@@ -36,6 +36,11 @@ export class SchedulerService {
         return;
       }
 
+      if (!config.collections || config.collections.length === 0) {
+        console.log('Nenhuma coleção de mensagens configurada');
+        return;
+      }
+
       const now = new Date();
 
       for (const group of config.groups) {
@@ -46,19 +51,39 @@ export class SchedulerService {
         );
 
         if (shouldSend) {
-          console.log(`Enviando mensagem para ${group.name} (${group.chatId})`);
+          // Escolhe uma coleção aleatória
+          const collection = await configRepository.getRandomCollection(config.id);
           
-          const success = await sendTelegramMessage(
-            config.botToken,
-            group.chatId,
-            config.message
-          );
+          if (!collection || collection.messages.length === 0) {
+            console.log('Nenhuma mensagem encontrada na coleção');
+            continue;
+          }
 
-          if (success) {
+          console.log(`Enviando coleção "${collection.name}" para ${group.name} (${group.chatId})`);
+          
+          // Envia todas as mensagens da coleção em sequência
+          let allSuccess = true;
+          for (const message of collection.messages) {
+            const success = await sendTelegramMessage(
+              config.botToken,
+              group.chatId,
+              message.content
+            );
+            
+            if (!success) {
+              allSuccess = false;
+              console.error(`Erro ao enviar mensagem para ${group.name}`);
+            }
+            
+            // Pequeno delay entre mensagens (500ms)
+            if (collection.messages.length > 1) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          }
+
+          if (allSuccess) {
             await configRepository.updateGroupLastSent(group.chatId);
-            console.log(`Mensagem enviada com sucesso para ${group.name}`);
-          } else {
-            console.error(`Erro ao enviar mensagem para ${group.name}`);
+            console.log(`Coleção "${collection.name}" enviada com sucesso para ${group.name}`);
           }
         }
       }

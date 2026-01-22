@@ -11,14 +11,34 @@ datasource db {
 }
 
 model BotConfig {
-  id              String   @id @default(cuid())
+  id              String            @id @default(cuid())
   botToken        String
-  message         String
   intervalMinutes Int
-  isActive        Boolean  @default(false)
+  isActive        Boolean           @default(false)
+  sendMode        String            @default("random") // "random" ou "sequential"
+  currentIndex    Int               @default(0) // Para modo sequencial
   groups          Group[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  collections     MessageCollection[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model MessageCollection {
+  id        String    @id @default(cuid())
+  name      String
+  order     Int       @default(0)
+  messages  Message[]
+  configId  String
+  config    BotConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+}
+
+model Message {
+  id           String            @id @default(cuid())
+  content      String
+  order        Int               @default(0)
+  collectionId String
+  collection   MessageCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
 }
 
 model Group {

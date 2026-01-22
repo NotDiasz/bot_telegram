@@ -28,12 +28,19 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { botToken, message, intervalMinutes, groups } = body;
+    const { botToken, intervalMinutes, groups, collections } = body;
 
     // Validações
-    if (!botToken || !message || !intervalMinutes || !groups || groups.length === 0) {
+    if (!botToken || !intervalMinutes || !groups || groups.length === 0) {
       return NextResponse.json(
-        { error: 'Dados inválidos. Todos os campos são obrigatórios.' },
+        { error: 'Token, intervalo e grupos são obrigatórios.' },
+        { status: 400 }
+      );
+    }
+
+    if (!collections || collections.length === 0) {
+      return NextResponse.json(
+        { error: 'Adicione pelo menos uma coleção de mensagens.' },
         { status: 400 }
       );
     }
@@ -47,9 +54,9 @@ export async function POST(request: Request) {
 
     const config = await configRepository.createOrUpdateConfig({
       botToken,
-      message,
       intervalMinutes: parseInt(intervalMinutes),
       groups,
+      collections,
     });
 
     if (!config) {

@@ -44,8 +44,8 @@ export default function Home() {
                     Crie um bot no Telegram com{' '}
                     <a
                       href="https://t.me/botfather"
-                      target="_blank"
-                      rel="noopener noreferrer"
+            target="_blank"
+            rel="noopener noreferrer"
                       className="text-blue-600 hover:underline"
                     >
                       @BotFather
@@ -101,7 +101,7 @@ export default function Home() {
             Desenvolvido com Next.js, Prisma e Telegram Bot API
           </p>
         </footer>
-      </div>
-    </main>
+        </div>
+      </main>
   );
 }
