@@ -30,42 +30,37 @@ export class ConfigRepository {
     intervalMinutes: number;
     groups: Array<{ chatId: string; name: string }>;
     collections: Array<{ name: string; messages: string[] }>;
-  }): Promise<BotConfig | null> {
-    try {
-      // Remove configuração anterior
-      await prisma.botConfig.deleteMany({});
+  }): Promise<BotConfig> {
+    // Remove configuração anterior
+    await prisma.botConfig.deleteMany({});
 
-      // Cria nova configuração
-      const config = await prisma.botConfig.create({
-        data: {
-          botToken: data.botToken,
-          intervalMinutes: data.intervalMinutes,
-          groups: {
-            create: data.groups,
-          },
-          collections: {
-            create: data.collections.map(col => ({
-              name: col.name,
-              messages: {
-                create: col.messages.map((content, index) => ({
-                  content,
-                  order: index,
-                })),
-              },
-            })),
-          },
+    // Cria nova configuração
+    const config = await prisma.botConfig.create({
+      data: {
+        botToken: data.botToken,
+        intervalMinutes: data.intervalMinutes,
+        groups: {
+          create: data.groups,
         },
-        include: { 
-          groups: true,
-          collections: { include: { messages: true } }
+        collections: {
+          create: data.collections.map(col => ({
+            name: col.name,
+            messages: {
+              create: col.messages.map((content, index) => ({
+                content,
+                order: index,
+              })),
+            },
+          })),
         },
-      });
+      },
+      include: {
+        groups: true,
+        collections: { include: { messages: true } }
+      },
+    });
 
-      return config;
-    } catch (error) {
-      console.error('Erro ao salvar configuração:', error);
-      return null;
-    }
+    return config;
   }
 
   async updateBotStatus(isActive: boolean): Promise<boolean> {
